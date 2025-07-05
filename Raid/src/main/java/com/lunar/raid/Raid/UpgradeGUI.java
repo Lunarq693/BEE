@@ -143,16 +143,16 @@ public class UpgradeGUI implements Listener {
 
         // Check if the player has the required item
         if (!hasRequiredItem(player, requiredItemName)) {
-            player.sendMessage("§cYou need a BARRIER item named '§a" + requiredItemName + "§c' to perform this upgrade!");
+            player.sendMessage("§cYou need a BARRIER item named '" + requiredItemName + "' to perform this upgrade!");
             return;
         }
 
         performUpgrade(player, town, upgradeKey, requiredItemName);
     }
 
-    // Check if the player has the required item based on item name
+    // Check if the player has the required item - now accepts any color or no color
     private boolean hasRequiredItem(Player player, String requiredItem) {
-        plugin.getLogger().info("Checking for BARRIER item with display name: §a" + requiredItem);
+        plugin.getLogger().info("Checking for BARRIER item with name containing: " + requiredItem);
 
         for (ItemStack item : player.getInventory()) {
             if (item == null || item.getType() == Material.AIR) continue;
@@ -160,31 +160,63 @@ public class UpgradeGUI implements Listener {
             ItemMeta meta = item.getItemMeta();
             if (meta == null) continue;
 
-            // Check if the item is a BARRIER with the correct display name
+            // Check if the item is a BARRIER
+            if (item.getType() != Material.BARRIER) continue;
+
             String itemDisplayName = meta.getDisplayName();
-            String expectedDisplayName = "§a" + requiredItem;
             
-            plugin.getLogger().info("Checking item: " + item.getType() + " with display name: '" + itemDisplayName + "' against expected: '" + expectedDisplayName + "'");
+            plugin.getLogger().info("Checking BARRIER item with display name: '" + itemDisplayName + "'");
             
-            if (item.getType() == Material.BARRIER && itemDisplayName.equals(expectedDisplayName)) {
-                plugin.getLogger().info("Found matching item!");
+            // Check for exact match OR match without color codes
+            if (itemDisplayName.equals(requiredItem) || 
+                stripColorCodes(itemDisplayName).equals(requiredItem) ||
+                itemDisplayName.equals("§a" + requiredItem) ||
+                itemDisplayName.equals("§f" + requiredItem) ||
+                itemDisplayName.equals("§e" + requiredItem) ||
+                itemDisplayName.equals("§b" + requiredItem) ||
+                itemDisplayName.equals("§c" + requiredItem) ||
+                itemDisplayName.equals("§d" + requiredItem) ||
+                itemDisplayName.equals("§6" + requiredItem) ||
+                itemDisplayName.equals("§9" + requiredItem)) {
+                plugin.getLogger().info("Found matching BARRIER item!");
                 return true;
             }
         }
 
-        plugin.getLogger().info("No matching item found in inventory");
+        plugin.getLogger().info("No matching BARRIER item found in inventory");
         return false;
+    }
+
+    // Helper method to remove color codes
+    private String stripColorCodes(String text) {
+        if (text == null) return "";
+        return text.replaceAll("§[0-9a-fk-or]", "");
     }
 
     private void performUpgrade(Player player, Town town, String upgradeKey, String requiredItem) {
         // Remove the required item from inventory
         for (ItemStack item : player.getInventory()) {
             if (item != null && item.getType() == Material.BARRIER && 
-                item.getItemMeta() != null && 
-                item.getItemMeta().getDisplayName().equals("§a" + requiredItem)) {
-                item.setAmount(item.getAmount() - 1);
-                player.updateInventory();
-                break;
+                item.getItemMeta() != null) {
+                
+                String itemDisplayName = item.getItemMeta().getDisplayName();
+                
+                // Check if this is the item we want to consume
+                if (itemDisplayName.equals(requiredItem) || 
+                    stripColorCodes(itemDisplayName).equals(requiredItem) ||
+                    itemDisplayName.equals("§a" + requiredItem) ||
+                    itemDisplayName.equals("§f" + requiredItem) ||
+                    itemDisplayName.equals("§e" + requiredItem) ||
+                    itemDisplayName.equals("§b" + requiredItem) ||
+                    itemDisplayName.equals("§c" + requiredItem) ||
+                    itemDisplayName.equals("§d" + requiredItem) ||
+                    itemDisplayName.equals("§6" + requiredItem) ||
+                    itemDisplayName.equals("§9" + requiredItem)) {
+                    
+                    item.setAmount(item.getAmount() - 1);
+                    player.updateInventory();
+                    break;
+                }
             }
         }
 
