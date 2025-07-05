@@ -42,6 +42,7 @@ public final class Raid extends JavaPlugin {
         this.getCommand("stamp").setExecutor(new StampCommand(this));
         getCommand("townupgrade").setExecutor(new UpgradeCommand(this)); // Ensure this command works
         getCommand("townupgrade").setExecutor(new TownUpgradeSystem(this));  // Or your appropriate command executor
+        getCommand("giveupgradeitem").setExecutor(new GiveUpgradeItemCommand(this)); // New command
 
         getLogger().info("Raid plugin has been enabled!");
     }

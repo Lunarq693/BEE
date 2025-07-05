@@ -33,15 +33,25 @@ commands:
     description: Stamp an item with a specific upgrade ID in its lore
     usage: /stamp <upgrade-id>
 
+  giveupgradeitem:
+    description: Give yourself an upgrade item for testing
+    usage: /giveupgradeitem <item-name>
+    permission: raid.admin
+    permission-message: You don't have permission to use this command!
+
 permissions:
   raid.use:
     description: Allows the use of the raid command
     default: true
 
   town.upgrade:
-    description: Allows the user to upgrade their town’s defense
+    description: Allows the user to upgrade their town's defense
     default: op
 
   earth.menu:
     description: Allows the user to access the Earth menu
+    default: op
+
+  raid.admin:
+    description: Allows the use of admin commands
     default: op
