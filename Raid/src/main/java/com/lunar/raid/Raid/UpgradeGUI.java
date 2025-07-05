@@ -36,6 +36,13 @@ public class UpgradeGUI implements Listener {
         plugin.getLogger().info("Opening upgrade GUI for player: " + player.getName());
 
         FileConfiguration cfg = plugin.getConfig();
+        
+        // Check if upgrades section exists
+        if (!cfg.contains("upgrades")) {
+            player.sendMessage("§cNo upgrades configuration found!");
+            return;
+        }
+        
         Set<String> upgrades = cfg.getConfigurationSection("upgrades").getKeys(false);
 
         org.bukkit.inventory.Inventory inv = Bukkit.createInventory(null, 45, "Town Upgrades");
@@ -56,8 +63,10 @@ public class UpgradeGUI implements Listener {
             String desc = cfg.getString(path + ".description", "No info");
             String requiredItem = cfg.getString(path + ".required-item", null);
 
+            plugin.getLogger().info("Processing upgrade: " + upgradeKey + " with required item: " + requiredItem);
+
             if (requiredItem == null) {
-                player.sendMessage("§cNo required item found in the config for " + upgradeKey);
+                plugin.getLogger().warning("No required item found in config for " + upgradeKey);
                 continue;
             }
 
@@ -74,6 +83,7 @@ public class UpgradeGUI implements Listener {
             List<String> lore = new ArrayList<>();
             lore.add("§7" + desc);
             lore.add("§7Required Item: §e" + requiredItem);
+            lore.add("§7Upgrade Key: §b" + upgradeKey); // Debug info
             if (isUnlocked)
                 lore.add("§7Click to upgrade!");
             if (isCurrent)
@@ -103,10 +113,14 @@ public class UpgradeGUI implements Listener {
 
         String requiredItemName = meta.getDisplayName().replace("§a", "");
         
+        plugin.getLogger().info("Clicked item with display name: " + requiredItemName);
+        plugin.getLogger().info("Available mappings: " + displayNameToUpgradeKey.toString());
+        
         // Get the actual upgrade key from our mapping
         String upgradeKey = displayNameToUpgradeKey.get(requiredItemName);
         if (upgradeKey == null) {
             player.sendMessage("§cCould not find upgrade configuration for: " + requiredItemName);
+            plugin.getLogger().warning("No mapping found for: " + requiredItemName);
             return;
         }
 
@@ -118,9 +132,18 @@ public class UpgradeGUI implements Listener {
         Town town = res.getTownOrNull();
         if (town == null) return;
 
+        // Verify the upgrade exists in config
+        FileConfiguration cfg = plugin.getConfig();
+        String configPath = "upgrades." + upgradeKey;
+        if (!cfg.contains(configPath)) {
+            player.sendMessage("§cUpgrade configuration missing for: " + upgradeKey);
+            plugin.getLogger().warning("Config path not found: " + configPath);
+            return;
+        }
+
         // Check if the player has the required item
         if (!hasRequiredItem(player, requiredItemName)) {
-            player.sendMessage("§cYou need a " + requiredItemName + " to perform this upgrade!");
+            player.sendMessage("§cYou need a BARRIER item named '§a" + requiredItemName + "§c' to perform this upgrade!");
             return;
         }
 
@@ -129,7 +152,7 @@ public class UpgradeGUI implements Listener {
 
     // Check if the player has the required item based on item name
     private boolean hasRequiredItem(Player player, String requiredItem) {
-        plugin.getLogger().info("Checking for item with name: " + requiredItem);
+        plugin.getLogger().info("Checking for BARRIER item with display name: §a" + requiredItem);
 
         for (ItemStack item : player.getInventory()) {
             if (item == null || item.getType() == Material.AIR) continue;
@@ -138,12 +161,18 @@ public class UpgradeGUI implements Listener {
             if (meta == null) continue;
 
             // Check if the item is a BARRIER with the correct display name
-            if (item.getType() == Material.BARRIER && meta.getDisplayName().equals("§a" + requiredItem)) {
-                plugin.getLogger().info("Player has the required item: " + requiredItem);
+            String itemDisplayName = meta.getDisplayName();
+            String expectedDisplayName = "§a" + requiredItem;
+            
+            plugin.getLogger().info("Checking item: " + item.getType() + " with display name: '" + itemDisplayName + "' against expected: '" + expectedDisplayName + "'");
+            
+            if (item.getType() == Material.BARRIER && itemDisplayName.equals(expectedDisplayName)) {
+                plugin.getLogger().info("Found matching item!");
                 return true;
             }
         }
 
+        plugin.getLogger().info("No matching item found in inventory");
         return false;
     }
 
@@ -165,13 +194,15 @@ public class UpgradeGUI implements Listener {
         String mobName = getMobForUpgrade(upgradeKey);
         spawnMythicMob(player, town, mobName);
 
-        player.sendMessage("§aUpgrade successful! Your town's defense has been upgraded.");
+        player.sendMessage("§aUpgrade successful! Your town's defense has been upgraded to " + upgradeKey + "!");
         player.closeInventory();
     }
 
     private String getMobForUpgrade(String upgradeKey) {
         FileConfiguration cfg = plugin.getConfig();
-        return cfg.getString("upgrades." + upgradeKey + ".mob", "SkeletonKing");
+        String mobName = cfg.getString("upgrades." + upgradeKey + ".mob", "SkeletonKing");
+        plugin.getLogger().info("Getting mob for upgrade " + upgradeKey + ": " + mobName);
+        return mobName;
     }
 
     private void spawnMythicMob(Player player, Town town, String mobName) {
@@ -182,6 +213,7 @@ public class UpgradeGUI implements Listener {
             player.sendMessage("§6A " + mobName + " has been summoned to defend the town!");
         } catch (Exception e) {
             player.sendMessage("§cFailed to spawn mob: " + e.getMessage());
+            plugin.getLogger().warning("Failed to spawn mob " + mobName + ": " + e.getMessage());
         }
     }
 }
