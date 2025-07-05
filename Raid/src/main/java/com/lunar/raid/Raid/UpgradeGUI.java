@@ -20,13 +20,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UpgradeGUI implements Listener {
     private final JavaPlugin plugin;
+    private final Map<String, String> displayNameToUpgradeKey = new HashMap<>();
 
     public UpgradeGUI(JavaPlugin plugin) {
         this.plugin = plugin;
-        Bukkit.getPluginManager().registerEvents(this, plugin);  // Register the event listener
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public void open(Player player) {
@@ -46,18 +49,20 @@ public class UpgradeGUI implements Listener {
         if (town == null) return;
 
         int slot = 0;
+        displayNameToUpgradeKey.clear(); // Clear previous mappings
 
         for (String upgradeKey : upgrades) {
             String path = "upgrades." + upgradeKey;
             String desc = cfg.getString(path + ".description", "No info");
-
-            // Fetch the required-item from the config
             String requiredItem = cfg.getString(path + ".required-item", null);
 
             if (requiredItem == null) {
                 player.sendMessage("§cNo required item found in the config for " + upgradeKey);
-                continue; // Skip this upgrade if no required item is found
+                continue;
             }
+
+            // Store the mapping between display name and upgrade key
+            displayNameToUpgradeKey.put(requiredItem, upgradeKey);
 
             boolean isUnlocked = TownUpgradeSystem.isUpgradeUnlocked(town, upgradeKey);
             boolean isCurrent = TownUpgradeSystem.isCurrentUpgrade(town, upgradeKey);
@@ -65,7 +70,7 @@ public class UpgradeGUI implements Listener {
 
             ItemStack item = new ItemStack(mat);
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName("§a" + upgradeKey);
+            meta.setDisplayName("§a" + requiredItem);
             List<String> lore = new ArrayList<>();
             lore.add("§7" + desc);
             lore.add("§7Required Item: §e" + requiredItem);
@@ -76,9 +81,6 @@ public class UpgradeGUI implements Listener {
             else
                 lore.add("§7Not unlocked yet.");
             meta.setLore(lore);
-
-            // Set the item name to match the required item from config (e.g., "Dark Knight Boss")
-            meta.setDisplayName("§a" + requiredItem);
             item.setItemMeta(meta);
 
             inv.setItem(slot++, item);
@@ -99,9 +101,16 @@ public class UpgradeGUI implements Listener {
         ItemMeta meta = clicked.getItemMeta();
         if (meta == null) return;
 
-        String requiredItem = meta.getDisplayName().replace("§a", "");  // Remove the formatting (e.g., §a) from the name
+        String requiredItemName = meta.getDisplayName().replace("§a", "");
+        
+        // Get the actual upgrade key from our mapping
+        String upgradeKey = displayNameToUpgradeKey.get(requiredItemName);
+        if (upgradeKey == null) {
+            player.sendMessage("§cCould not find upgrade configuration for: " + requiredItemName);
+            return;
+        }
 
-        plugin.getLogger().info("Detected upgrade required item: " + requiredItem);
+        plugin.getLogger().info("Processing upgrade: " + upgradeKey + " with required item: " + requiredItemName);
 
         Resident res = TownyAPI.getInstance().getResident(player);
         if (res == null || !res.hasTown()) return;
@@ -109,22 +118,13 @@ public class UpgradeGUI implements Listener {
         Town town = res.getTownOrNull();
         if (town == null) return;
 
-        FileConfiguration cfg = plugin.getConfig();
-        String path = "upgrades." + requiredItem;  // Update path to use upgradeKey
-        String configRequiredItem = cfg.getString(path + ".required-item", null);  // Get the required item from config
-
-        if (configRequiredItem == null) {
-            player.sendMessage("§cError: Required item is missing in the config.");
-            return;
-        }
-
         // Check if the player has the required item
-        if (!hasRequiredItem(player, configRequiredItem)) {
-            player.sendMessage("§cYou need a " + configRequiredItem + " to perform this upgrade!");
+        if (!hasRequiredItem(player, requiredItemName)) {
+            player.sendMessage("§cYou need a " + requiredItemName + " to perform this upgrade!");
             return;
         }
 
-        performUpgrade(player, town, requiredItem, configRequiredItem);
+        performUpgrade(player, town, upgradeKey, requiredItemName);
     }
 
     // Check if the player has the required item based on item name
@@ -132,24 +132,27 @@ public class UpgradeGUI implements Listener {
         plugin.getLogger().info("Checking for item with name: " + requiredItem);
 
         for (ItemStack item : player.getInventory()) {
-            if (item == null || item.getType() == Material.AIR) continue;  // Skip empty slots
+            if (item == null || item.getType() == Material.AIR) continue;
 
             ItemMeta meta = item.getItemMeta();
             if (meta == null) continue;
 
-            // Check if the item's name matches the required name
-            if (meta.getDisplayName().equals(requiredItem)) {
+            // Check if the item is a BARRIER with the correct display name
+            if (item.getType() == Material.BARRIER && meta.getDisplayName().equals("§a" + requiredItem)) {
                 plugin.getLogger().info("Player has the required item: " + requiredItem);
-                return true;  // Player has the correct item
+                return true;
             }
         }
 
-        return false;  // Return false if no matching item is found
+        return false;
     }
 
     private void performUpgrade(Player player, Town town, String upgradeKey, String requiredItem) {
+        // Remove the required item from inventory
         for (ItemStack item : player.getInventory()) {
-            if (item != null && item.getType() == Material.BARRIER && item.getItemMeta().getDisplayName().equals(requiredItem)) {
+            if (item != null && item.getType() == Material.BARRIER && 
+                item.getItemMeta() != null && 
+                item.getItemMeta().getDisplayName().equals("§a" + requiredItem)) {
                 item.setAmount(item.getAmount() - 1);
                 player.updateInventory();
                 break;
@@ -163,17 +166,12 @@ public class UpgradeGUI implements Listener {
         spawnMythicMob(player, town, mobName);
 
         player.sendMessage("§aUpgrade successful! Your town's defense has been upgraded.");
+        player.closeInventory();
     }
 
     private String getMobForUpgrade(String upgradeKey) {
-        switch (upgradeKey) {
-            case "upgrade-1": return "SkeletonKing";
-            case "upgrade-2": return "SkeletalMinion";
-            case "upgrade-3": return "StaticallyChargedSheep";
-            case "upgrade-4": return "AngrySludge";
-            case "upgrade-5": return "GIANT";
-            default: return "SkeletonKing";
-        }
+        FileConfiguration cfg = plugin.getConfig();
+        return cfg.getString("upgrades." + upgradeKey + ".mob", "SkeletonKing");
     }
 
     private void spawnMythicMob(Player player, Town town, String mobName) {
