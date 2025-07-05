@@ -63,7 +63,10 @@ public class UpgradeGUI implements Listener {
 
             ItemStack item = new ItemStack(mat);
             ItemMeta meta = item.getItemMeta();
+            
+            // Store the upgradeKey in the display name so we can retrieve it later
             meta.setDisplayName("§a" + upgradeKey);
+            
             List<String> lore = new ArrayList<>();
             lore.add("§7" + desc);
             lore.add("§7Required Item: §e" + requiredItem);
@@ -75,9 +78,7 @@ public class UpgradeGUI implements Listener {
                 lore.add("§7Not unlocked yet.");
             meta.setLore(lore);
 
-            meta.setDisplayName("§a" + requiredItem);
             item.setItemMeta(meta);
-
             inv.setItem(slot++, item);
         }
 
@@ -96,9 +97,10 @@ public class UpgradeGUI implements Listener {
         ItemMeta meta = clicked.getItemMeta();
         if (meta == null) return;
 
-        String requiredItem = meta.getDisplayName().replace("§a", "");
+        // Get the upgradeKey from the display name
+        String upgradeKey = meta.getDisplayName().replace("§a", "");
 
-        plugin.getLogger().info("Detected upgrade required item: " + requiredItem);
+        plugin.getLogger().info("Detected upgrade key: " + upgradeKey);
 
         Resident res = TownyAPI.getInstance().getResident(player);
         if (res == null || !res.hasTown()) return;
@@ -107,11 +109,11 @@ public class UpgradeGUI implements Listener {
         if (town == null) return;
 
         FileConfiguration cfg = plugin.getConfig();
-        String path = "upgrades." + requiredItem;
+        String path = "upgrades." + upgradeKey;
         String configRequiredItem = cfg.getString(path + ".required-item", null);
 
         if (configRequiredItem == null) {
-            player.sendMessage("§cError: Required item is missing in the config.");
+            player.sendMessage("§cError: Required item is missing in the config for upgrade: " + upgradeKey);
             return;
         }
 
@@ -121,7 +123,7 @@ public class UpgradeGUI implements Listener {
             return;
         }
 
-        performUpgrade(player, town, requiredItem, configRequiredItem);
+        performUpgrade(player, town, upgradeKey, configRequiredItem);
     }
 
     // Check if the player has an item with the required text in its lore
