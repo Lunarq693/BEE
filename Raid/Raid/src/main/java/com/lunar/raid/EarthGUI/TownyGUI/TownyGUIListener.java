@@ -32,7 +32,7 @@ public class TownyGUIListener implements Listener {
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, "§aTowny Management");
 
-        // Border pattern
+        // Fixed border pattern with proper Light Blue/Lime alternating
         for (int i = 0; i < 27; i++) {
             boolean isEdge = i < 9 || i >= 18 || i % 9 == 0 || i % 9 == 8;
 
@@ -46,23 +46,22 @@ public class TownyGUIListener implements Listener {
                 Material paneMaterial;
 
                 if (i < 9) {
+                    // Top row: corners are light blue, alternating pattern for middle
                     if (i == 0 || i == 8) {
                         paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     } else {
-                        paneMaterial = (i % 2 == 0)
-                                ? Material.LIGHT_BLUE_STAINED_GLASS_PANE
-                                : Material.LIME_STAINED_GLASS_PANE;
+                        paneMaterial = (i % 2 == 1) ? Material.LIGHT_BLUE_STAINED_GLASS_PANE : Material.LIME_STAINED_GLASS_PANE;
                     }
                 } else if (i >= 18) {
+                    // Bottom row: corners are light blue, alternating pattern for middle
                     int pos = i - 18;
-                    if (pos == 8) {
+                    if (pos == 0 || pos == 8) {
                         paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     } else {
-                        paneMaterial = (pos % 2 == 0)
-                                ? Material.LIGHT_BLUE_STAINED_GLASS_PANE
-                                : Material.LIME_STAINED_GLASS_PANE;
+                        paneMaterial = (pos % 2 == 1) ? Material.LIGHT_BLUE_STAINED_GLASS_PANE : Material.LIME_STAINED_GLASS_PANE;
                     }
                 } else {
+                    // Side columns: lime
                     paneMaterial = Material.LIME_STAINED_GLASS_PANE;
                 }
 
