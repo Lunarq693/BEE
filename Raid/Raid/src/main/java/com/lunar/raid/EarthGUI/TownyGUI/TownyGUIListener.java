@@ -32,8 +32,12 @@ public class TownyGUIListener implements Listener {
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, "§aTowny Management");
 
-        // Create glass border with proper Light Blue/Lime pattern
-        // Fill all edge slots first
+        // First, fill the entire inventory with a base pattern to ensure visibility
+        for (int i = 0; i < 27; i++) {
+            inv.setItem(i, createPane(Material.BLACK_STAINED_GLASS_PANE));
+        }
+
+        // Now create the proper Light Blue/Lime pattern on edges
         for (int i = 0; i < 27; i++) {
             boolean isEdge = i < 9 || i >= 18 || i % 9 == 0 || i % 9 == 8;
 
@@ -66,7 +70,15 @@ public class TownyGUIListener implements Listener {
             }
         }
 
-        // Now add the back button (this will override the glass pane at slot 18)
+        // Clear the center area (remove black glass from non-edge slots)
+        for (int i = 0; i < 27; i++) {
+            boolean isEdge = i < 9 || i >= 18 || i % 9 == 0 || i % 9 == 8;
+            if (!isEdge) {
+                inv.setItem(i, null); // Clear center slots
+            }
+        }
+
+        // Add the back button (this will override the glass pane at slot 18)
         inv.setItem(18, createGlowingMenuItem(Material.ARROW, "§cGo Back", "§7Return to Earth Menu"));
 
         boolean hasTown = TownyAPI.getInstance().getResident(player).hasTown();
