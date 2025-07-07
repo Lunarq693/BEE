@@ -32,42 +32,42 @@ public class TownyGUIListener implements Listener {
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, "§aTowny Management");
 
-        // Fixed border pattern with proper Light Blue/Lime alternating
+        // Create glass border with proper Light Blue/Lime pattern
+        // Fill all edge slots first
         for (int i = 0; i < 27; i++) {
             boolean isEdge = i < 9 || i >= 18 || i % 9 == 0 || i % 9 == 8;
 
             if (isEdge) {
-                // Back button in slot 18 (bottom-left corner)
-                if (i == 18) {
-                    inv.setItem(i, createGlowingMenuItem(Material.ARROW, "§cGo Back", "§7Return to Earth Menu"));
-                    continue;
-                }
-
                 Material paneMaterial;
 
                 if (i < 9) {
-                    // Top row: corners are light blue, alternating pattern for middle
+                    // Top row: Light Blue at corners (0,8), alternating Lime/Light Blue in middle
                     if (i == 0 || i == 8) {
                         paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     } else {
-                        paneMaterial = (i % 2 == 1) ? Material.LIGHT_BLUE_STAINED_GLASS_PANE : Material.LIME_STAINED_GLASS_PANE;
+                        // Positions 1,2,3,4,5,6,7 - alternate starting with Lime
+                        paneMaterial = (i % 2 == 1) ? Material.LIME_STAINED_GLASS_PANE : Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     }
                 } else if (i >= 18) {
-                    // Bottom row: corners are light blue, alternating pattern for middle
+                    // Bottom row: Light Blue at corners, alternating pattern
                     int pos = i - 18;
                     if (pos == 0 || pos == 8) {
                         paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     } else {
-                        paneMaterial = (pos % 2 == 1) ? Material.LIGHT_BLUE_STAINED_GLASS_PANE : Material.LIME_STAINED_GLASS_PANE;
+                        // Positions 1,2,3,4,5,6,7 - alternate starting with Lime
+                        paneMaterial = (pos % 2 == 1) ? Material.LIME_STAINED_GLASS_PANE : Material.LIGHT_BLUE_STAINED_GLASS_PANE;
                     }
                 } else {
-                    // Side columns: lime
+                    // Left and right sides (slots 9, 17) - all Lime
                     paneMaterial = Material.LIME_STAINED_GLASS_PANE;
                 }
 
                 inv.setItem(i, createPane(paneMaterial));
             }
         }
+
+        // Now add the back button (this will override the glass pane at slot 18)
+        inv.setItem(18, createGlowingMenuItem(Material.ARROW, "§cGo Back", "§7Return to Earth Menu"));
 
         boolean hasTown = TownyAPI.getInstance().getResident(player).hasTown();
 
@@ -77,7 +77,6 @@ public class TownyGUIListener implements Listener {
             inv.setItem(11, createGlowingMenuItem(Material.GRASS_BLOCK, "§aCreate Town", "Create a new town"));
         }
 
-        // Change "Coming soon!" message to open the actual upgrade GUI
         inv.setItem(13, createGlowingMenuItem(Material.EMERALD_BLOCK, "§eUpgrade Defense", "§7Upgrade your town's raid defense"));
         inv.setItem(15, createGlowingMenuItem(Material.BOOK, "§bPlots", "Manage your plots"));
 
@@ -87,19 +86,23 @@ public class TownyGUIListener implements Listener {
     private ItemStack createPane(Material mat) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(" ");
-        item.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            item.setItemMeta(meta);
+        }
         return item;
     }
 
     private ItemStack createGlowingMenuItem(Material mat, String name, String lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        meta.setLore(List.of(lore));
-        meta.addEnchant(org.bukkit.enchantments.Enchantment.LURE, 1, true);
-        meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
-        item.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore));
+            meta.addEnchant(org.bukkit.enchantments.Enchantment.LURE, 1, true);
+            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+            item.setItemMeta(meta);
+        }
         return item;
     }
 
