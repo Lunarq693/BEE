@@ -1,0 +1,37 @@
+upgrades:
+  upgrade-1:
+    description: Dark Knight Boss
+    required-item: 'Dark Knight Boss'  # Item name as per required-item
+    mob: bl_dark_knight
+  upgrade-2:
+    description: Forest Guardian Boss
+    required-item: 'Forest Guardian Boss'
+    mob: ForestGuardian
+  upgrade-3:
+    description: Backrooms Boss
+    required-item: 'Backrooms Boss'
+    mob: dimmer_sister
+  upgrade-4:
+    description: Deceptor Boss
+    required-item: 'Deceptor Boss'
+    mob: mf_deceptor
+  upgrade-5:
+    description: Illusionist Boss
+    required-item: 'Illusionist Boss'
+    mob: bl_illusionist
+  upgrade-6:
+    description: Nightarrow Wendigo Boss
+    required-item: 'Nightarrow Wendigo Boss'
+    mob: Nightharrow_Wendigo
+  upgrade-7:
+    description: Tower Skeleton Boss
+    required-item: 'Tower Skeleton Boss'
+    mob: TOWER_SKELETON
+  upgrade-8:
+    description: Krampus Boss
+    required-item: 'Krampus Boss'
+    mob: LRD_KRAMPUS
+  upgrade-9:
+    description: Virus Queen Boss
+    required-item: 'Virus Queen Boss'
+    mob: gm_virusg_queen

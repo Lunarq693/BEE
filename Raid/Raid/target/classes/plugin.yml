@@ -1,0 +1,85 @@
+name: Raid
+version: '1.0-SNAPSHOT'
+main: com.lunar.raid.Raid.Raid
+api-version: '1.21'
+authors: [Lunar]
+description: Raid plugin that spawns MythicMobs to defend claims
+depend: [SCore, ExecutableItems, Towny, MythicMobs]
+
+commands:
+  raid:
+    description: Start a raid by spawning a MythicMob in a claimed area
+    usage: /<command>
+    permission: raid.use
+    permission-message: You don't have permission to use this command!
+
+  townupgrade:
+    description: Opens the upgrade GUI
+    usage: /<command>
+
+  upgrades:
+    description: View and apply town upgrades
+    usage: /<command>
+    permission: town.upgrade
+    permission-message: You can't do that!
+
+  earth:
+    description: Opens the Earth main GUI
+    usage: /<command>
+    permission: earth.menu
+    permission-message: You can't use this.
+
+  stamp:
+    description: Stamp an item with a specific upgrade ID in its lore
+    usage: /stamp <upgrade-id>
+
+  dungeonsGUI:
+    description: Opens the Dungeons GUI directly
+    usage: /<command>
+    permission: dungeons.gui
+    permission-message: You don't have permission to use this command!
+
+permissions:
+  raid.use:
+    description: Allows the use of the raid command
+    default: true
+
+  town.upgrade:
+    description: Allows the user to upgrade their town's defense
+    default: true
+
+  earth.menu:
+    description: Allows the user to access the Earth menu
+    default: true
+
+  dungeons.gui:
+    description: Allows the user to access the Dungeons GUI directly
+    default: true
+
+  dungeon.tier2:
+    description: Allows access to Tier II dungeons
+    default: false
+
+  dungeon.tier3:
+    description: Allows access to Tier III dungeons
+    default: false
+
+  dungeon.tier4:
+    description: Allows access to Tier IV dungeons
+    default: false
+
+  dungeon.tier5:
+    description: Allows access to Tier V dungeons
+    default: false
+
+  dungeon.tier6:
+    description: Allows access to Tier VI dungeons
+    default: false
+
+  dungeon.tier7:
+    description: Allows access to Tier VII dungeons
+    default: false
+
+  dungeon.tier8:
+    description: Allows access to Tier VIII dungeons
+    default: false
