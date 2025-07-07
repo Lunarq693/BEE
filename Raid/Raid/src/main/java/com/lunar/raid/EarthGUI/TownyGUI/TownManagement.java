@@ -31,25 +31,53 @@ public class TownManagement implements Listener {
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 45, title);
 
-        Material lime = Material.LIME_STAINED_GLASS_PANE;
-        Material blue = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
-
-        // Top and bottom borders
-        for (int i = 0; i < 9; i++)
-            inv.setItem(i, createGlassPane(i % 2 == 0 ? lime : blue));
-        for (int i = 36; i < 45; i++) {
-            if (i == 44) continue; // Leave slot 44 empty for Delete Town
-            inv.setItem(i, createGlassPane((i - 36) % 2 == 0 ? lime : blue));
+        // First, fill the entire inventory with a base pattern to ensure visibility
+        for (int i = 0; i < 45; i++) {
+            inv.setItem(i, createGlassPane(Material.BLACK_STAINED_GLASS_PANE));
         }
 
-        // Left and right sides
-        int[] sides = {0, 9, 18, 27, 35, 8, 17, 26, 34}; // Removed 44 and 34
-        for (int i = 0; i < sides.length; i++) {
-            if (sides[i] == 34) continue; // Don't place glass above Town Delete
-            inv.setItem(sides[i], createGlassPane(i % 2 == 0 ? lime : blue));
+        // Now create the proper Light Blue/Lime pattern on edges
+        for (int i = 0; i < 45; i++) {
+            boolean isEdge = i < 9 || i >= 36 || i % 9 == 0 || i % 9 == 8;
+
+            if (isEdge) {
+                Material paneMaterial;
+
+                if (i < 9) {
+                    // Top row: Light Blue at corners (0,8), alternating Lime/Light Blue in middle
+                    if (i == 0 || i == 8) {
+                        paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                    } else {
+                        // Positions 1,2,3,4,5,6,7 - alternate starting with Lime
+                        paneMaterial = (i % 2 == 1) ? Material.LIME_STAINED_GLASS_PANE : Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                    }
+                } else if (i >= 36) {
+                    // Bottom row: Light Blue at corners, alternating pattern
+                    int pos = i - 36;
+                    if (pos == 0 || pos == 8) {
+                        paneMaterial = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                    } else {
+                        // Positions 1,2,3,4,5,6,7 - alternate starting with Lime
+                        paneMaterial = (pos % 2 == 1) ? Material.LIME_STAINED_GLASS_PANE : Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                    }
+                } else {
+                    // Left and right sides - all Lime
+                    paneMaterial = Material.LIME_STAINED_GLASS_PANE;
+                }
+
+                inv.setItem(i, createGlassPane(paneMaterial));
+            }
         }
 
-        // Action items (unchanged positions unless specified)
+        // Clear the center area (remove black glass from non-edge slots)
+        for (int i = 0; i < 45; i++) {
+            boolean isEdge = i < 9 || i >= 36 || i % 9 == 0 || i % 9 == 8;
+            if (!isEdge) {
+                inv.setItem(i, null); // Clear center slots
+            }
+        }
+
+        // Action items
         inv.setItem(12, createMenuItem(Material.PLAYER_HEAD, "§eAdd Resident", "Add a resident to your town", true));
         inv.setItem(13, createMenuItem(Material.IRON_SWORD, "§eKick Resident", "Kick a resident from your town", true));
         inv.setItem(14, createMenuItem(Material.DIAMOND_HELMET, "§dSet Mayor", "Assign a new mayor", true));
@@ -61,31 +89,37 @@ public class TownManagement implements Listener {
         inv.setItem(30, createMenuItem(Material.GOLD_INGOT, "§6Withdraw Money", "Withdraw from town bank", true));
         inv.setItem(31, createMenuItem(Material.GOLD_BLOCK, "§6Deposit Money", "Deposit to town bank", true));
 
+        // Back button (this will override the glass pane at slot 36)
         inv.setItem(36, createMenuItem(Material.ARROW, "§cGo Back", "Return to Towny Management menu", false));
-        inv.setItem(44, createMenuItem(Material.BARRIER, "§4Delete Town", "Disband your town", false)); // Moved here
+        
+        // Delete Town button (this will override the glass pane at slot 44)
+        inv.setItem(44, createMenuItem(Material.BARRIER, "§4Delete Town", "Disband your town", false));
 
         player.openInventory(inv);
     }
 
-
     private ItemStack createGlassPane(Material material) {
         ItemStack pane = new ItemStack(material);
         ItemMeta meta = pane.getItemMeta();
-        meta.setDisplayName(" ");
-        pane.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            pane.setItemMeta(meta);
+        }
         return pane;
     }
 
     private ItemStack createMenuItem(Material material, String name, String lore, boolean glow) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        meta.setLore(List.of(lore));
-        if (glow) {
-            meta.addEnchant(org.bukkit.enchantments.Enchantment.LURE, 1, true);
-            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.setLore(List.of(lore));
+            if (glow) {
+                meta.addEnchant(org.bukkit.enchantments.Enchantment.LURE, 1, true);
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+            }
+            item.setItemMeta(meta);
         }
-        item.setItemMeta(meta);
         return item;
     }
 
