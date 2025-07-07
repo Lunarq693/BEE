@@ -5,6 +5,7 @@ api-version: '1.21'
 authors: [Lunar]
 description: Raid plugin that spawns MythicMobs to defend claims
 depend: [SCore, ExecutableItems, Towny, MythicMobs]
+softdepend: [Vault, LuckPerms]
 
 commands:
   raid:
