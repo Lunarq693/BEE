@@ -1,6 +1,5 @@
 package com.lunar.raid.EarthGUI;
 
-import com.lunar.raid.EarthGUI.TownyGUI.TownyGUI;
 import com.lunar.raid.EarthGUI.TownyGUI.TownyGUIListener;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,7 +29,7 @@ public class EarthMenuListener implements Listener {
             case 11: // Town Management
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     player.closeInventory();
-                    new TownyGUI(plugin).open(player);
+                    townyGUIListener.open(player); // Use TownyGUIListener instead of TownyGUI
                 });
                 break;
 
